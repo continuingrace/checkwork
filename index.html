@@ -377,11 +377,11 @@ button.add-btn:hover{background:var(--lime-dark)}
     <div class="profile-edit-title">프로필 편집</div>
     <div class="profile-edit-row">
       <label class="profile-edit-label">이름</label>
-      <input class="profile-edit-input" id="editName" placeholder="이름 (예: myname)">
+      <input class="profile-edit-input" id="editName" placeholder="이름 (예: dingdookim)">
     </div>
     <div class="profile-edit-row">
       <label class="profile-edit-label">소개</label>
-      <input class="profile-edit-input" id="editSub" placeholder="소개 (예: 디자이너 myname)">
+      <input class="profile-edit-input" id="editSub" placeholder="소개 (예: 디자이너 이혜련)">
     </div>
     <div class="profile-edit-row">
       <label class="profile-edit-label">프로필 사진</label>
@@ -872,7 +872,7 @@ function loadAvatar(e){
     const p=JSON.parse(localStorage.getItem('re_profile')||'{}');
     p.avatar=ev.target.result;
     localStorage.setItem('re_profile',JSON.stringify(p));
-    loadProfile();closeProfileEdit();
+    loadProfile();
   };
   reader.readAsDataURL(file);
 }
@@ -880,7 +880,8 @@ function saveProfile(){
   const name=document.getElementById('editName').value.trim();
   const sub=document.getElementById('editSub').value.trim();
   const p=JSON.parse(localStorage.getItem('re_profile')||'{}');
-  if(name)p.name=name;if(sub)p.sub=sub;
+  p.name=name||p.name||'';
+  p.sub=sub||p.sub||'';
   localStorage.setItem('re_profile',JSON.stringify(p));
   loadProfile();closeProfileEdit();
 }
