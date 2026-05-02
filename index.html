@@ -250,9 +250,13 @@ button.add-btn:hover{background:var(--lime-dark)}
         <div class="datepick-popup" id="endPopup"></div>
       </div>
       <select id="projCat" style="flex-shrink:0">
-        <option value="work">work</option>
-        <option value="client">client</option>
-        <option value="todo">to do</option>
+        <option value="b2b">B2B</option>
+        <option value="b2c">B2C</option>
+        <option value="coasis">COASIS</option>
+        <option value="cit">CiT</option>
+        <option value="team">우리 팀</option>
+        <option value="etc">기타</option>
+        <option value="todo">To do</option>
       </select>
       <button class="add-btn" onclick="addProject()" style="flex-shrink:0">+ 추가</button>
     </div>
@@ -358,7 +362,7 @@ button.add-btn:hover{background:var(--lime-dark)}
 
 <script>
 // ── 상수 ────────────────────────────────────────────────
-const CAT_LABEL={work:'work',client:'client',todo:'to do'};
+const CAT_LABEL={b2b:'B2B',b2c:'B2C',coasis:'COASIS',cit:'CiT',team:'우리 팀',etc:'기타',todo:'To do'};
 const DEFAULT_COLORS=['#ccefd4','#c0d8f8','#f5c8e8','#ddc8f8','#ffd9b3','#e8f5a0','#b3f0f0','#f5d0c8','#f0e0a0','#f8c8e8'];
 const SCHED={
   design:      {color:'#2d6e47',bg:'#ccefd4',tc:'#1a4a2e',label:'디자인 작업'},
