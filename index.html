@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="My Schedule">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --green-dark:#1a4a2e;--lime:#c8f000;--lime-dark:#9ab800;
@@ -20,34 +21,73 @@
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:36px 28px 60px}
 .app{max-width:1100px;margin:0 auto}
 
+/* 로그인 화면 */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:80vh}
+.login-box{background:var(--white);border-radius:24px;padding:40px 36px;width:min(400px,90vw);box-shadow:0 4px 24px rgba(0,0,0,.1)}
+.login-title{font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-.5px}
+.login-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+.login-label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px;margin-top:14px}
+.login-input{width:100%;font-size:15px;font-family:var(--font);padding:11px 14px;border:none;border-radius:12px;background:var(--surface);color:var(--text);outline:none}
+.login-input:focus{background:#dcdcd5}
+.login-btn{width:100%;margin-top:20px;font-size:15px;font-family:var(--font);font-weight:600;padding:13px;border:none;border-radius:12px;background:var(--lime);color:var(--text);cursor:pointer}
+.login-btn:hover{background:var(--lime-dark)}
+.login-msg{font-size:13px;text-align:center;margin-top:14px;color:var(--muted);min-height:20px}
+.login-toggle{font-size:13px;text-align:center;margin-top:12px;color:var(--muted)}
+.login-toggle span{color:var(--green-dark);cursor:pointer;font-weight:500}
+
+/* 상단 */
 .top-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
 .stat-card{background:var(--white);border-radius:16px;padding:18px 22px}
 .stat-label{font-size:13px;color:var(--muted);margin-bottom:6px}
 .stat-val{font-size:36px;font-weight:300;letter-spacing:-1px}
-.stat-card.date-card{display:flex;align-items:center;justify-content:flex-end}
-.date-txt{font-size:15px;color:var(--muted)}
 .stat-card.clickable{cursor:pointer;transition:background .15s}
 .stat-card.clickable:hover{background:#efefea}
 
+/* 프로필 헤더 */
+.profile-header{display:flex;align-items:center;gap:18px;margin-bottom:20px}
+.profile-avatar-wrap{width:56px;height:56px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--muted)}
+.profile-avatar{width:100%;height:100%;object-fit:cover;display:none}
+.profile-info{flex:1}
+.profile-name{font-size:22px;font-weight:600;letter-spacing:-.5px}
+.profile-name-en{font-weight:600;font-size:22px;letter-spacing:-.5px}
+.profile-sub{font-size:14px;color:var(--muted);margin-top:2px}
+.profile-edit-btn{font-size:12px;color:var(--muted);cursor:pointer;border:none;background:none;padding:4px 8px;border-radius:6px;margin-left:8px}
+.profile-edit-btn:hover{background:var(--surface)}
+.profile-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.today-badge{font-size:14px;color:var(--muted);white-space:nowrap}
+.logout-btn{font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:6px}
+.logout-btn:hover{background:var(--surface)}
+
+/* 카드 */
 .card{background:var(--white);border-radius:20px;padding:26px 28px;margin-bottom:16px}
 .section-label{font-size:12px;font-weight:500;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
 
+/* 캘린더 */
 .month-nav{display:flex;align-items:center;gap:12px}
-.nav-btn{width:30px;height:30px;border-radius:50%;background:var(--surface);border:none;cursor:pointer;font-size:12px;color:var(--text);display:flex;align-items:center;justify-content:center;transition:background .15s}
+.nav-btn{width:30px;height:30px;border-radius:50%;background:var(--surface);border:none;cursor:pointer;font-size:12px;color:var(--text);display:flex;align-items:center;justify-content:center}
 .nav-btn:hover{background:var(--lime)}
 .month-txt{font-size:17px;font-weight:500;letter-spacing:-.3px}
-
 .cal-wrap{overflow-x:auto}
 .cal-table{width:100%;border-collapse:separate;border-spacing:3px;min-width:480px}
 .cal-table th{font-size:14px;font-weight:500;color:var(--muted);padding:6px 0 10px;text-align:center}
 .cal-table th.sun{color:#e03030}
 .cal-day-row td{padding:2px 3px;text-align:center;vertical-align:top}
-.day-cell{font-size:16px;font-weight:400;padding:10px 4px 8px;border-radius:10px;color:var(--text);line-height:1;display:inline-block;width:100%;min-width:34px;letter-spacing:-.3px}
+.day-cell{font-size:16px;font-weight:400;padding:10px 4px 4px;border-radius:10px;color:var(--text);line-height:1;display:inline-block;width:100%;min-width:34px;letter-spacing:-.3px;cursor:pointer;position:relative}
+.day-cell:hover{background:var(--surface)}
 .day-cell.today{background:#c8f000;color:#1a1a1a;font-weight:600}
 .day-cell.sunday{color:#e03030}
 .day-cell.holiday{color:#e03030;font-weight:500}
 .day-cell.other-month{color:#ccc;pointer-events:none}
+.day-cell.selected-day{outline:2px solid var(--lime-dark);outline-offset:1px}
+.sched-dot{width:5px;height:5px;border-radius:50%;background:var(--lime-dark);margin:3px auto 0;display:block}
 .bar-row td{padding:2px 3px;position:relative}
+
+/* 날짜 클릭 일정 패널 */
+.day-panel{background:var(--surface);border-radius:14px;padding:14px 16px;margin-top:14px}
+.day-panel-title{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px}
+.day-panel-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:14px}
+.day-panel-item:last-child{border-bottom:none}
+.day-panel-empty{font-size:13px;color:var(--muted)}
 
 .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(0,0,0,.06)}
 .legend-item{display:flex;align-items:center;gap:7px;font-size:14px;color:#555}
@@ -56,14 +96,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .save-notice{font-size:12px;color:var(--green-dark);opacity:0;transition:opacity .3s;text-align:right;margin-top:8px}
 .save-notice.show{opacity:1}
 
+/* 프로젝트 추가 */
 .proj-add{display:flex;gap:8px;flex-wrap:nowrap;margin-top:18px;padding-top:18px;border-top:1px solid rgba(0,0,0,.06);align-items:center}
 input,select{font-size:15px;font-family:var(--font);padding:11px 14px;border:none;border-radius:12px;background:var(--surface);color:var(--text);outline:none;transition:background .15s}
 input:focus,select:focus{background:#dcdcd5}
 .proj-add input[type=text]{flex:1;min-width:60px}
 .proj-add select{flex-shrink:0;font-size:14px;padding:11px 8px}
-button.add-btn{font-size:15px;font-family:var(--font);font-weight:500;padding:11px 20px;border:none;border-radius:12px;background:var(--lime);color:var(--text);cursor:pointer;transition:background .15s;white-space:nowrap}
+button.add-btn{font-size:15px;font-family:var(--font);font-weight:500;padding:11px 20px;border:none;border-radius:12px;background:var(--lime);color:var(--text);cursor:pointer;white-space:nowrap}
 button.add-btn:hover{background:var(--lime-dark)}
 
+/* 일정 */
 .schedule-list{display:flex;flex-direction:column;gap:8px}
 .sched-item{display:flex;gap:16px;align-items:center;padding:16px 18px;border-radius:14px;background:var(--surface)}
 .sched-time{font-size:15px;font-weight:500;color:var(--muted);min-width:54px}
@@ -77,7 +119,9 @@ button.add-btn:hover{background:var(--lime-dark)}
 .empty-msg{font-size:15px;color:var(--muted);padding:10px 0}
 .del-btn{font-size:13px;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:6px;border:none;background:transparent;flex-shrink:0}
 .del-btn:hover{background:rgba(0,0,0,.07);color:var(--text)}
+#schedDatePicker{font-size:12px;padding:4px 8px;border-radius:8px;background:var(--surface);border:none;color:var(--muted);cursor:pointer;font-family:var(--font)}
 
+/* 날짜 피커 */
 .date-btn{font-size:13px;font-family:var(--font);padding:11px 14px;border:none;border-radius:12px;background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;min-width:90px;text-align:center}
 .date-btn.selected{color:var(--text);font-weight:500}
 .date-btn:hover{background:#dcdcd5}
@@ -100,21 +144,11 @@ button.add-btn:hover{background:var(--lime-dark)}
 .dp-cell.in-range{background:#e0f0e0}
 .dp-cell.holiday,.dp-cell.sunday{color:#e03030}
 
+/* 상태 배지 */
 .status-badge{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;cursor:pointer;white-space:nowrap;flex-shrink:0;border:none;font-family:var(--font)}
 .status-badge:hover{opacity:.75}
 .toggle-btn{font-size:12px;font-family:var(--font);padding:5px 12px;border:none;border-radius:8px;background:var(--surface);color:var(--muted);cursor:pointer}
 .toggle-btn.active{background:var(--text);color:var(--white)}
-.toggle-btn:hover{background:#d0d0ca}
-
-/* 프로필 */
-.profile-header{display:flex;align-items:center;gap:18px;margin-bottom:20px}
-.profile-avatar-wrap{width:56px;height:56px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--muted)}
-.profile-avatar{width:100%;height:100%;object-fit:cover;display:none}
-.profile-name{font-size:22px;font-weight:600;letter-spacing:-.5px}
-.profile-name-en{font-weight:600;font-size:22px;letter-spacing:-.5px}
-.profile-sub{font-size:14px;color:var(--muted);margin-top:2px}
-.profile-edit-btn{font-size:12px;color:var(--muted);cursor:pointer;border:none;background:none;padding:4px 8px;border-radius:6px;margin-left:8px}
-.profile-edit-btn:hover{background:var(--surface)}
 
 /* 모달 공통 */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;display:none;align-items:center;justify-content:center}
@@ -163,25 +197,43 @@ button.add-btn:hover{background:var(--lime-dark)}
 .verse-en{font-size:12px;line-height:1.75;color:var(--muted);font-style:italic;margin-bottom:12px;word-break:break-word}
 .verse-ref{font-size:12px;color:var(--lime-dark);text-align:right;font-weight:600}
 
-/* 일정 날짜 피커 */
-#schedDatePicker{font-size:12px;padding:4px 8px;border-radius:8px;background:var(--surface);border:none;color:var(--muted);cursor:pointer;font-family:var(--font)}
+/* 로딩 */
+.loading{text-align:center;padding:60px;font-size:15px;color:var(--muted)}
 
 @media(max-width:700px){
   body{padding:20px 14px 50px}
   .top-row{grid-template-columns:1fr 1fr}
-  .stat-card.date-card{display:none}
+  .top-row .stat-card:last-child{display:none}
   .cal-table{min-width:300px}
-  .day-cell{font-size:13px;padding:7px 2px 5px;min-width:28px}
+  .day-cell{font-size:13px;padding:7px 2px 3px;min-width:28px}
   .proj-add{flex-wrap:wrap}
   .proj-add input[type=text]{min-width:100%}
   .sched-add-row{flex-wrap:wrap}
   .sched-add-row input[type=text]{min-width:100%}
   .card{padding:18px 16px}
+  .profile-right .today-badge{font-size:12px}
 }
 </style>
 </head>
 <body>
-<div class="app">
+
+<!-- 로그인 화면 -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-title">My Schedule</div>
+    <div class="login-sub" id="loginSubTxt">로그인하고 어디서든 일정을 관리하세요</div>
+    <label class="login-label">이메일</label>
+    <input class="login-input" id="loginEmail" type="email" placeholder="이메일 주소">
+    <label class="login-label">비밀번호</label>
+    <input class="login-input" id="loginPw" type="password" placeholder="비밀번호">
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">로그인</button>
+    <div class="login-msg" id="loginMsg"></div>
+    <div class="login-toggle" id="loginToggle">계정이 없으신가요? <span onclick="toggleAuthMode()">회원가입</span></div>
+  </div>
+</div>
+
+<!-- 메인 앱 -->
+<div class="app" id="mainApp" style="display:none">
 
   <!-- 프로필 헤더 -->
   <div class="profile-header">
@@ -189,12 +241,16 @@ button.add-btn:hover{background:var(--lime-dark)}
       <img class="profile-avatar" id="profileImg" alt="">
       <span id="avatarIcon">👤</span>
     </div>
-    <div>
+    <div class="profile-info">
       <div style="display:flex;align-items:center">
         <div class="profile-name" id="profileNameDisplay">My <span class="profile-name-en">schedule</span></div>
         <button class="profile-edit-btn" onclick="openProfileEdit()">✏️ 편집</button>
       </div>
-      <div class="profile-sub" id="profileSubDisplay">이름을 설정해주세요</div>
+      <div class="profile-sub" id="profileSubDisplay">이름을 설정해 주세요</div>
+    </div>
+    <div class="profile-right">
+      <span class="today-badge" id="todayBadge"></span>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
 
@@ -208,8 +264,9 @@ button.add-btn:hover{background:var(--lime-dark)}
       <div class="stat-label">오늘 일정</div>
       <div class="stat-val" id="statSched">0</div>
     </div>
-    <div class="stat-card date-card">
-      <span class="date-txt" id="todayLabel"></span>
+    <div class="stat-card">
+      <div class="stat-label">앞으로의 일정</div>
+      <div class="stat-val" id="statFuture">0</div>
     </div>
   </div>
 
@@ -227,6 +284,7 @@ button.add-btn:hover{background:var(--lime-dark)}
       </div>
     </div>
     <div class="cal-wrap"><table class="cal-table" id="calTable"></table></div>
+    <div id="dayPanel"></div>
     <div class="legend" id="projLegend"></div>
     <p class="holiday-note" id="holidayNote"></p>
     <div class="proj-add">
@@ -352,17 +410,23 @@ button.add-btn:hover{background:var(--lime-dark)}
 
 <script>
 // ════════════════════════════════════════════
+// 0. Supabase 초기화
+// ════════════════════════════════════════════
+const SB_URL='https://sdqfjcivhlrolapbfvon.supabase.co';
+const SB_KEY='sb_publishable_j6qnpqe2PT17_Y0TTdLYUw_kVywGpfH';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+let currentUser=null;
+
+// ════════════════════════════════════════════
 // 1. 유틸 & 상수
 // ════════════════════════════════════════════
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function todayKey(){return new Date().toISOString().slice(0,10);}
 function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
 function firstDow(y,m){return new Date(y,m,1).getDay();}
-
 const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const WDS=['일','월','화','수','목','금','토'];
 const today=new Date();
-
 const CAT_LABEL={b2b:'B2B',b2c:'B2C',coasis:'COASIS',cit:'CiT',team:'우리 팀',etc:'기타',todo:'To do'};
 const DEFAULT_COLORS=['#ccefd4','#c0d8f8','#f5c8e8','#ddc8f8','#ffd9b3','#e8f5a0','#b3f0f0','#f5d0c8','#f0e0a0','#f8c8e8'];
 const SCHED={
@@ -383,17 +447,12 @@ const STATUS_STYLE={
   overdue: {label:'진행중',bg:'#e8f5a0',color:'#5a6800'},
 };
 const KR_HOLIDAYS={
-  '2025-01-01':'신정','2025-01-28':'설날연휴','2025-01-29':'설날','2025-01-30':'설날연휴',
-  '2025-03-01':'삼일절','2025-05-01':'노동절','2025-05-05':'어린이날','2025-05-06':'어린이날 대체',
-  '2025-05-15':'부처님오신날','2025-06-06':'현충일','2025-08-15':'광복절',
-  '2025-10-03':'개천절','2025-10-05':'추석연휴','2025-10-06':'추석','2025-10-07':'추석연휴',
-  '2025-10-08':'추석 대체','2025-10-09':'한글날','2025-12-25':'크리스마스',
-  '2026-01-01':'신정','2026-02-16':'설날연휴','2026-02-17':'설날','2026-02-18':'설날연휴',
-  '2026-03-01':'삼일절','2026-03-02':'삼일절 대체','2026-05-01':'노동절','2026-05-05':'어린이날',
-  '2026-05-24':'부처님오신날','2026-05-25':'부처님오신날 대체','2026-06-06':'현충일',
-  '2026-06-03':'지방선거일','2026-08-15':'광복절','2026-08-17':'광복절 대체',
-  '2026-09-24':'추석연휴','2026-09-25':'추석','2026-09-26':'추석연휴',
-  '2026-10-03':'개천절','2026-10-05':'개천절 대체','2026-10-09':'한글날','2026-12-25':'크리스마스',
+  '2025-01-01':'신정','2025-01-29':'설날','2025-03-01':'삼일절','2025-05-01':'노동절',
+  '2025-05-05':'어린이날','2025-05-15':'부처님오신날','2025-06-06':'현충일','2025-08-15':'광복절',
+  '2025-10-03':'개천절','2025-10-06':'추석','2025-10-09':'한글날','2025-12-25':'크리스마스',
+  '2026-01-01':'신정','2026-02-17':'설날','2026-03-01':'삼일절','2026-05-01':'노동절',
+  '2026-05-05':'어린이날','2026-05-24':'부처님오신날','2026-06-06':'현충일','2026-06-03':'지방선거일',
+  '2026-08-15':'광복절','2026-09-25':'추석','2026-10-03':'개천절','2026-10-09':'한글날','2026-12-25':'크리스마스',
   '2027-01-01':'신정','2027-03-01':'삼일절','2027-05-01':'노동절','2027-05-05':'어린이날',
   '2027-05-13':'부처님오신날','2027-06-06':'현충일','2027-08-15':'광복절',
   '2027-10-03':'개천절','2027-10-09':'한글날','2027-12-25':'크리스마스',
@@ -401,22 +460,101 @@ const KR_HOLIDAYS={
 function getHoliday(y,m,d){return KR_HOLIDAYS[`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`]||null;}
 
 // ════════════════════════════════════════════
-// 2. 스토리지
+// 2. 데이터 (메모리)
 // ════════════════════════════════════════════
-function loadData(){try{const r=localStorage.getItem('re_sched_v5');if(r)return JSON.parse(r);}catch(e){}return null;}
-function saveData(){
-  localStorage.setItem('re_sched_v5',JSON.stringify({projects,scheds,nextProjId,nextSchedId}));
-  const n=document.getElementById('saveNotice');n.classList.add('show');setTimeout(()=>n.classList.remove('show'),1500);
+let projects=[],scheds=[];
+
+// ════════════════════════════════════════════
+// 3. 인증
+// ════════════════════════════════════════════
+let _isSignup=false;
+function toggleAuthMode(){
+  _isSignup=!_isSignup;
+  document.getElementById('loginBtn').textContent=_isSignup?'회원가입':'로그인';
+  document.getElementById('loginSubTxt').textContent=_isSignup?'새 계정을 만들어 주세요':'로그인하고 어디서든 일정을 관리하세요';
+  document.getElementById('loginToggle').innerHTML=_isSignup
+    ?'이미 계정이 있으신가요? <span onclick="toggleAuthMode()">로그인</span>'
+    :'계정이 없으신가요? <span onclick="toggleAuthMode()">회원가입</span>';
+  document.getElementById('loginMsg').textContent='';
+}
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pw=document.getElementById('loginPw').value;
+  const msg=document.getElementById('loginMsg');
+  if(!email||!pw){msg.textContent='이메일과 비밀번호를 입력해 주세요.';return;}
+  msg.textContent='처리 중...';
+  let res;
+  if(_isSignup){
+    res=await sb.auth.signUp({email,password:pw});
+    if(res.error){msg.textContent=res.error.message;return;}
+    msg.textContent='가입 완료! 이메일을 확인해 주세요.';
+  } else {
+    res=await sb.auth.signInWithPassword({email,password:pw});
+    if(res.error){msg.textContent='이메일 또는 비밀번호가 틀렸어요.';return;}
+    await onLoggedIn(res.data.user);
+  }
+}
+async function doLogout(){
+  await sb.auth.signOut();
+  currentUser=null;projects=[];scheds=[];
+  document.getElementById('mainApp').style.display='none';
+  document.getElementById('loginWrap').style.display='flex';
+}
+async function onLoggedIn(user){
+  currentUser=user;
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  await loadAll();
+  initUI();
 }
 
-const _saved=loadData();
-let projects=_saved?.projects||[];
-let scheds=(_saved?.scheds||[]).map(s=>s.date?s:{...s,date:todayKey()});
-let nextProjId=_saved?.nextProjId||1;
-let nextSchedId=_saved?.nextSchedId||1;
+// ════════════════════════════════════════════
+// 4. Supabase DB
+// ════════════════════════════════════════════
+async function loadAll(){
+  const uid=currentUser.id;
+  const [pr,sc,pf]=await Promise.all([
+    sb.from('projects').select('*').eq('user_id',uid).order('created_at'),
+    sb.from('schedules').select('*').eq('user_id',uid).order('date').order('time'),
+    sb.from('profiles').select('*').eq('id',uid).single(),
+  ]);
+  projects=pr.data||[];
+  scheds=sc.data||[];
+  if(pf.data)renderProfileData(pf.data);
+}
+async function saveProject(p){
+  const uid=currentUser.id;
+  const row={user_id:uid,name:p.name,start_day:p.start,end_day:p.end,start_year:p.startYear,start_month:p.startMonth,end_year:p.endYear,end_month:p.endMonth,cat:p.cat,color:p.color,status:p.status||'active'};
+  const res=await sb.from('projects').insert(row).select().single();
+  if(res.data)projects.push({...res.data,start:res.data.start_day,end:res.data.end_day,startYear:res.data.start_year,startMonth:res.data.start_month,endYear:res.data.end_year,endMonth:res.data.end_month});
+  showSave();
+}
+async function updateProjectStatus(id,status){
+  await sb.from('projects').update({status}).eq('id',id);
+  projects=projects.map(p=>p.id===id?{...p,status}:p);
+}
+async function deleteProject(id){
+  await sb.from('projects').delete().eq('id',id);
+  projects=projects.filter(p=>p.id!==id);
+}
+async function saveSched(s){
+  const uid=currentUser.id;
+  const row={user_id:uid,date:s.date,time:s.time,title:s.title,type:s.type};
+  const res=await sb.from('schedules').insert(row).select().single();
+  if(res.data)scheds.push(res.data);
+}
+async function deleteSched(id){
+  await sb.from('schedules').delete().eq('id',id);
+  scheds=scheds.filter(s=>s.id!==id);
+}
+async function saveProfileToDB(data){
+  const uid=currentUser.id;
+  await sb.from('profiles').upsert({id:uid,...data,updated_at:new Date().toISOString()});
+}
+function showSave(){const n=document.getElementById('saveNotice');n.classList.add('show');setTimeout(()=>n.classList.remove('show'),1500);}
 
 // ════════════════════════════════════════════
-// 3. 색상 유틸
+// 5. 색상 유틸
 // ════════════════════════════════════════════
 function hexToRgb(h){return{r:parseInt(h.slice(1,3),16),g:parseInt(h.slice(3,5),16),b:parseInt(h.slice(5,7),16)};}
 function luminance(h){const{r,g,b}=hexToRgb(h);return .299*r+.587*g+.114*b;}
@@ -425,22 +563,32 @@ function getPal(p){const f=p.color||'#ccefd4';return{fill:f,text:luminance(f)>16
 function getColorForNew(){const used=projects.map(p=>p.color).filter(Boolean);const avail=DEFAULT_COLORS.filter(c=>!used.includes(c));if(avail.length)return avail[0];const cnt={};DEFAULT_COLORS.forEach(c=>cnt[c]=0);used.forEach(c=>{if(cnt[c]!==undefined)cnt[c]++;});return DEFAULT_COLORS.reduce((a,b)=>cnt[a]<=cnt[b]?a:b);}
 
 // ════════════════════════════════════════════
-// 4. 프로젝트 상태
+// 6. 프로젝트 상태
 // ════════════════════════════════════════════
 function getAutoStatus(p){
   if(p.status==='done')return'done';
   const ts=new Date(today.getFullYear(),today.getMonth(),today.getDate()).getTime();
-  const sY=p.startYear||today.getFullYear(),sM=p.startMonth!==undefined?p.startMonth:today.getMonth();
-  const eY=p.endYear||today.getFullYear(),eM=p.endMonth!==undefined?p.endMonth:today.getMonth();
-  const s=new Date(sY,sM,p.start).getTime(),e=new Date(eY,eM,p.end).getTime();
+  const sY=p.startYear||p.start_year||today.getFullYear();
+  const sM=p.startMonth!==undefined?p.startMonth:p.start_month!==undefined?p.start_month:today.getMonth();
+  const eY=p.endYear||p.end_year||today.getFullYear();
+  const eM=p.endMonth!==undefined?p.endMonth:p.end_month!==undefined?p.end_month:today.getMonth();
+  const sd=p.start||p.start_day||1,ed=p.end||p.end_day||1;
+  const s=new Date(sY,sM,sd).getTime(),e=new Date(eY,eM,ed).getTime();
   if(ts<s)return'upcoming';if(ts>e)return'overdue';return'active';
+}
+function normP(p){
+  return{...p,
+    start:p.start||p.start_day,end:p.end||p.end_day,
+    startYear:p.startYear||p.start_year,startMonth:p.startMonth!==undefined?p.startMonth:p.start_month,
+    endYear:p.endYear||p.end_year,endMonth:p.endMonth!==undefined?p.endMonth:p.end_month,
+  };
 }
 
 // ════════════════════════════════════════════
-// 5. 프로젝트 모달
+// 7. 프로젝트 모달
 // ════════════════════════════════════════════
 function openProjModal(){
-  const actives=projects.filter(p=>{if(p.cat==='todo')return false;const s=getAutoStatus(p);return s==='active'||s==='overdue';});
+  const actives=projects.map(normP).filter(p=>{if(p.cat==='todo')return false;const s=getAutoStatus(p);return s==='active'||s==='overdue';});
   document.getElementById('modalProjList').innerHTML=actives.length
     ?actives.map(p=>{const pal=getPal(p);return`<div class="proj-modal-item"><div class="proj-modal-dot" style="background:${pal.dot}"></div><span class="proj-modal-name">${esc(p.name)}</span><span class="proj-modal-meta">${p.start}${p.start===p.end?'일 (당일)':'~'+p.end+'일'} · ${CAT_LABEL[p.cat]||p.cat}</span></div>`;}).join('')
     :`<p class="modal-empty">진행 중인 프로젝트가 없어요</p>`;
@@ -449,15 +597,14 @@ function openProjModal(){
 function closeProjModal(e){if(e.target===document.getElementById('projModal'))document.getElementById('projModal').classList.remove('open');}
 
 // ════════════════════════════════════════════
-// 6. 날짜 피커 (프로젝트용)
+// 8. 날짜 피커 (프로젝트용)
 // ════════════════════════════════════════════
 let _pickStart=null,_pickEnd=null,_dpMode=null,_dpYear=null,_dpMonth=null;
 function openDatePick(mode,e){
   e.stopPropagation();
   document.getElementById(mode==='start'?'endPopup':'startPopup').classList.remove('open');
   _dpMode=mode;if(!_dpYear){_dpYear=viewYear;_dpMonth=viewMonth;}
-  renderDatePick();
-  document.getElementById(mode==='start'?'startPopup':'endPopup').classList.add('open');
+  renderDatePick();document.getElementById(mode==='start'?'startPopup':'endPopup').classList.add('open');
 }
 function renderDatePick(){
   const popup=document.getElementById(_dpMode==='start'?'startPopup':'endPopup');
@@ -495,11 +642,12 @@ function dpSelect(y,m,d){
 document.addEventListener('click',()=>document.querySelectorAll('.datepick-popup').forEach(p=>p.classList.remove('open')));
 
 // ════════════════════════════════════════════
-// 7. 캘린더
+// 9. 캘린더
 // ════════════════════════════════════════════
-let viewYear=today.getFullYear(),viewMonth=today.getMonth(),_showAll=false;
+let viewYear=today.getFullYear(),viewMonth=today.getMonth(),_showAll=false,_selectedDay=null;
 function toggleAll(){_showAll=!_showAll;const b=document.getElementById('allToggle');b.classList.toggle('active',_showAll);b.textContent=_showAll?'이번 달만':'전체 보기';buildCal();}
 function changeMonth(d){viewMonth+=d;if(viewMonth>11){viewMonth=0;viewYear++;}if(viewMonth<0){viewMonth=11;viewYear--;}buildCal();}
+
 function buildCal(){
   const y=viewYear,m=viewMonth;
   document.getElementById('monthLabel').textContent=`${y}년 ${MONTHS[m]}`;
@@ -512,6 +660,11 @@ function buildCal(){
   for(let d=1;d<=days;d++)cells.push({d,type:'cur'});
   let nd=1;while(cells.length%7!==0)cells.push({d:nd++,type:'next'});
   const weeks=[];for(let i=0;i<cells.length;i+=7)weeks.push(cells.slice(i,i+7));
+
+  // 날짜별 일정 맵
+  const schedMap={};
+  scheds.forEach(s=>{if(!schedMap[s.date])schedMap[s.date]=[];schedMap[s.date].push(s);});
+
   const holidays=[];
   weeks.forEach(week=>{
     const tr=document.createElement('tr');tr.className='cal-day-row';
@@ -521,16 +674,22 @@ function buildCal(){
       else{
         const d=cell.d,isT=d===todayD,isSun=((sd+d-1)%7)===0,hn=getHoliday(y,m,d);
         if(hn&&!holidays.find(h=>h.name===hn))holidays.push({d,name:hn});
+        const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const hasS=schedMap[dateStr]&&schedMap[dateStr].length>0;
+        const isSel=_selectedDay===dateStr;
         let cls='day-cell';
         if(isT&&hn)cls+=' today holiday';else if(isT)cls+=' today';else if(hn)cls+=' holiday';else if(isSun)cls+=' sunday';
-        td.innerHTML=`<div class="${cls}">${d}</div>`;
+        if(isSel)cls+=' selected-day';
+        td.innerHTML=`<div class="${cls}" onclick="selectDay('${dateStr}')">${d}${hasS?'<span class="sched-dot"></span>':''}</div>`;
       }
       tr.appendChild(td);
     });
     table.appendChild(tr);
+
+    // 프로젝트 바
     const cc=week.filter(c=>c.type==='cur');if(!cc.length)return;
     const ws=cc[0].d,we=cc[cc.length-1].d;
-    const vp=_showAll?projects:projects.filter(p=>{
+    const vp=_showAll?projects.map(normP):projects.map(normP).filter(p=>{
       const sY=p.startYear||y,sM=p.startMonth!==undefined?p.startMonth:m;
       const eY=p.endYear||y,eM=p.endMonth!==undefined?p.endMonth:m;
       return new Date(sY,sM,p.start||1)<=new Date(y,m+1,0)&&new Date(eY,eM,p.end||28)>=new Date(y,m,1);
@@ -562,36 +721,60 @@ function buildCal(){
       table.appendChild(btr);
     });
   });
-  const lp=_showAll?projects:projects.filter(p=>{const sY=p.startYear||y,sM=p.startMonth!==undefined?p.startMonth:m,eY=p.endYear||y,eM=p.endMonth!==undefined?p.endMonth:m;return new Date(sY,sM,p.start||1)<=new Date(y,m+1,0)&&new Date(eY,eM,p.end||28)>=new Date(y,m,1);});
+
+  // 범례
+  const lp=_showAll?projects.map(normP):projects.map(normP).filter(p=>{const sY=p.startYear||y,sM=p.startMonth!==undefined?p.startMonth:m,eY=p.endYear||y,eM=p.endMonth!==undefined?p.endMonth:m;return new Date(sY,sM,p.start||1)<=new Date(y,m+1,0)&&new Date(eY,eM,p.end||28)>=new Date(y,m,1);});
   document.getElementById('projLegend').innerHTML=lp.map(p=>{
     const pal=getPal(p),st=getAutoStatus(p),ss=STATUS_STYLE[st]||STATUS_STYLE.active,isDone=st==='done';
     return`<div class="legend-item"><div class="legend-dot" style="background:${pal.dot};opacity:${isDone?.4:1}"></div><span style="opacity:${isDone?.45:1};text-decoration:${isDone?'line-through':'none'}">${esc(p.name)}&nbsp;<span style="color:${pal.dot};font-size:12px;font-weight:500">${pal.label}</span>&nbsp;${p.start===p.end?p.start+'일 (당일)':p.start+'~'+p.end+'일'}</span><button class="status-badge" style="background:${ss.bg};color:${ss.color}" onclick="toggleStatus(${p.id})">${ss.label}</button><button class="del-btn" onclick="delProject(${p.id})">✕</button></div>`;
   }).join('');
   document.getElementById('holidayNote').textContent=holidays.length?'공휴일 — '+holidays.map(h=>`${h.d}일 ${h.name}`).join(', '):`${MONTHS[m]} 법정공휴일 없음 · 일요일 빨간색`;
+
+  renderDayPanel();
   updateStats();
 }
-function addProject(){
+
+function selectDay(dateStr){
+  if(_selectedDay===dateStr){_selectedDay=null;}else{_selectedDay=dateStr;}
+  buildCal();
+}
+
+function renderDayPanel(){
+  const el=document.getElementById('dayPanel');
+  if(!_selectedDay){el.innerHTML='';return;}
+  const dayS=scheds.filter(s=>s.date===_selectedDay).sort((a,b)=>a.time.localeCompare(b.time));
+  const d=new Date(_selectedDay+'T00:00:00');
+  const title=`${d.getMonth()+1}월 ${d.getDate()}일 (${WDS[d.getDay()]}) 일정`;
+  let html=`<div class="day-panel"><div class="day-panel-title">${title}</div>`;
+  if(!dayS.length){html+=`<div class="day-panel-empty">일정이 없어요</div>`;}
+  else{dayS.forEach(s=>{const st=SCHED[s.type]||SCHED.design;html+=`<div class="day-panel-item"><div style="width:3px;height:20px;border-radius:2px;background:${st.color};flex-shrink:0"></div><span style="font-size:13px;color:var(--muted);min-width:44px">${s.time}</span><span style="flex:1;font-size:14px">${esc(s.title)}</span><span class="sched-tag" style="background:${st.bg};color:${st.tc};font-size:11px">${st.label}</span></div>`;});}
+  html+='</div>';el.innerHTML=html;
+}
+
+async function addProject(){
   const name=document.getElementById('projName').value.trim();if(!name||!_pickStart)return;
   const sY=_pickStart.y,sM=_pickStart.m,sD=_pickStart.d;
   const eY=_pickEnd?_pickEnd.y:sY,eM=_pickEnd?_pickEnd.m:sM,eD=_pickEnd?_pickEnd.d:sD;
-  projects.push({id:nextProjId++,name,start:sD,end:eD,startYear:sY,startMonth:sM,endYear:eY,endMonth:eM,cat:document.getElementById('projCat').value,color:getColorForNew(),year:sY,month:sM,status:'active'});
+  const p={name,start:sD,end:eD,startYear:sY,startMonth:sM,endYear:eY,endMonth:eM,cat:document.getElementById('projCat').value,color:getColorForNew(),status:'active'};
+  await saveProject(p);
   document.getElementById('projName').value='';
   _pickStart=null;_pickEnd=null;
-  const sb=document.getElementById('startBtn');sb.textContent='시작일';sb.classList.remove('selected');
+  const sb2=document.getElementById('startBtn');sb2.textContent='시작일';sb2.classList.remove('selected');
   const eb=document.getElementById('endBtn');eb.textContent='종료일';eb.classList.remove('selected');
-  saveData();buildCal();
+  buildCal();
 }
-function toggleStatus(id){projects=projects.map(p=>p.id!==id?p:{...p,status:p.status==='done'?'active':'done'});saveData();buildCal();}
-function delProject(id){projects=projects.filter(p=>p.id!==id);saveData();buildCal();}
+async function toggleStatus(id){
+  const p=projects.find(p=>p.id===id);if(!p)return;
+  const ns=p.status==='done'?'active':'done';
+  await updateProjectStatus(id,ns);buildCal();
+}
+async function delProject(id){await deleteProject(id);buildCal();}
 
 // ════════════════════════════════════════════
-// 8. 일정
+// 10. 일정
 // ════════════════════════════════════════════
 let _schedDate=todayKey();
-function onSchedDateChange(){
-  _schedDate=document.getElementById('schedDatePicker').value||todayKey();
-  updateSchedLabel();renderScheds();
-}
+function onSchedDateChange(){_schedDate=document.getElementById('schedDatePicker').value||todayKey();updateSchedLabel();renderScheds();}
 function updateSchedLabel(){
   const lbl=document.getElementById('schedCardLabel');
   if(_schedDate===todayKey()){lbl.textContent='오늘 일정';return;}
@@ -600,29 +783,28 @@ function updateSchedLabel(){
 }
 function renderScheds(){
   const list=document.getElementById('schedList');
-  const dayS=scheds.filter(s=>s.date===_schedDate);
+  const dayS=scheds.filter(s=>s.date===_schedDate).sort((a,b)=>a.time.localeCompare(b.time));
   if(!dayS.length){list.innerHTML=`<p class="empty-msg">${_schedDate===todayKey()?'오늘':'해당 날짜'} 일정이 없어요</p>`;updateStats();return;}
-  list.innerHTML=[...dayS].sort((a,b)=>a.time.localeCompare(b.time)).map(s=>{
-    const st=SCHED[s.type]||SCHED.design;
-    return`<div class="sched-item"><span class="sched-time">${s.time}</span><div class="sched-accent" style="background:${st.color}"></div><div class="sched-info"><span class="sched-title-txt">${esc(s.title)}</span><span class="sched-tag" style="background:${st.bg};color:${st.tc}">${st.label}</span></div><button class="del-btn" onclick="delSched(${s.id})">✕</button></div>`;
-  }).join('');
+  list.innerHTML=dayS.map(s=>{const st=SCHED[s.type]||SCHED.design;return`<div class="sched-item"><span class="sched-time">${s.time}</span><div class="sched-accent" style="background:${st.color}"></div><div class="sched-info"><span class="sched-title-txt">${esc(s.title)}</span><span class="sched-tag" style="background:${st.bg};color:${st.tc}">${st.label}</span></div><button class="del-btn" onclick="delSchedUI(${s.id})">✕</button></div>`;}).join('');
   updateStats();
 }
-function delSched(id){scheds=scheds.filter(s=>s.id!==id);saveData();renderScheds();}
-function addSched(){
+async function delSchedUI(id){await deleteSched(id);renderScheds();buildCal();}
+async function addSched(){
   const time=document.getElementById('schedTime').value,title=document.getElementById('schedTitle').value.trim(),type=document.getElementById('schedType').value;
   if(!title)return;
-  scheds.push({id:nextSchedId++,date:_schedDate,time,title,type});
+  await saveSched({date:_schedDate,time,title,type});
   document.getElementById('schedTitle').value='';
-  saveData();renderScheds();
+  renderScheds();buildCal();
 }
 function updateStats(){
-  document.getElementById('statProj').textContent=projects.filter(p=>{if(p.cat==='todo')return false;const s=getAutoStatus(p);return s==='active'||s==='overdue';}).length;
+  document.getElementById('statProj').textContent=projects.map(normP).filter(p=>{if(p.cat==='todo')return false;const s=getAutoStatus(p);return s==='active'||s==='overdue';}).length;
   document.getElementById('statSched').textContent=scheds.filter(s=>s.date===todayKey()).length;
+  const nowTs=new Date(todayKey()+'T00:00:00').getTime();
+  document.getElementById('statFuture').textContent=scheds.filter(s=>new Date(s.date+'T00:00:00').getTime()>nowTs).length;
 }
 
 // ════════════════════════════════════════════
-// 9. 크롭
+// 11. 크롭
 // ════════════════════════════════════════════
 let cropX=0,cropY=0,cropScale=1,cropNatW=0,cropNatH=0,isDragging=false,dSX=0,dSY=0,dSCX=0,dSCY=0,_pendingAvatar=null;
 function onPhotoSelected(e){
@@ -642,16 +824,8 @@ function onPhotoSelected(e){
   };
   reader.readAsDataURL(file);
 }
-function updateCrop(){
-  cropScale=parseFloat(document.getElementById('cropZoom').value);
-  const img=document.getElementById('cropImg');
-  img.style.width=cropNatW*cropScale+'px';img.style.height=cropNatH*cropScale+'px';
-  img.style.left=cropX+'px';img.style.top=cropY+'px';
-}
-function clampCrop(){
-  const area=document.getElementById('cropArea'),aW=area.offsetWidth,aH=area.offsetHeight;
-  cropX=Math.min(0,Math.max(aW-cropNatW*cropScale,cropX));cropY=Math.min(0,Math.max(aH-cropNatH*cropScale,cropY));
-}
+function updateCrop(){cropScale=parseFloat(document.getElementById('cropZoom').value);const img=document.getElementById('cropImg');img.style.width=cropNatW*cropScale+'px';img.style.height=cropNatH*cropScale+'px';img.style.left=cropX+'px';img.style.top=cropY+'px';}
+function clampCrop(){const area=document.getElementById('cropArea'),aW=area.offsetWidth,aH=area.offsetHeight;cropX=Math.min(0,Math.max(aW-cropNatW*cropScale,cropX));cropY=Math.min(0,Math.max(aH-cropNatH*cropScale,cropY));}
 const cropArea=document.getElementById('cropArea');
 cropArea.addEventListener('mousedown',e=>{isDragging=true;dSX=e.clientX;dSY=e.clientY;dSCX=cropX;dSCY=cropY;e.preventDefault();});
 document.addEventListener('mousemove',e=>{if(!isDragging)return;cropX=dSCX+(e.clientX-dSX);cropY=dSCY+(e.clientY-dSY);clampCrop();updateCrop();});
@@ -659,100 +833,78 @@ document.addEventListener('mouseup',()=>isDragging=false);
 cropArea.addEventListener('touchstart',e=>{isDragging=true;const t=e.touches[0];dSX=t.clientX;dSY=t.clientY;dSCX=cropX;dSCY=cropY;e.preventDefault();},{passive:false});
 document.addEventListener('touchmove',e=>{if(!isDragging)return;const t=e.touches[0];cropX=dSCX+(t.clientX-dSX);cropY=dSCY+(t.clientY-dSY);clampCrop();updateCrop();},{passive:false});
 document.addEventListener('touchend',()=>isDragging=false);
-function getCroppedImage(){
-  return new Promise(resolve=>{
-    const area=document.getElementById('cropArea'),aW=area.offsetWidth,aH=area.offsetHeight;
-    const r=80,cx=aW/2,cy=aH/2;
-    const canvas=document.createElement('canvas');canvas.width=320;canvas.height=320;
-    const ctx=canvas.getContext('2d');
-    ctx.beginPath();ctx.arc(160,160,160,0,Math.PI*2);ctx.clip();
-    const img=document.getElementById('cropImg');
-    const sx=(cx-r-cropX)/cropScale,sy=(cy-r-cropY)/cropScale,sw=r*2/cropScale,sh=r*2/cropScale;
-    ctx.drawImage(img,sx,sy,sw,sh,0,0,320,320);
-    resolve(canvas.toDataURL('image/jpeg',.9));
-  });
-}
+function getCroppedImage(){return new Promise(resolve=>{const area=document.getElementById('cropArea'),aW=area.offsetWidth,aH=area.offsetHeight,r=80,cx=aW/2,cy=aH/2,canvas=document.createElement('canvas');canvas.width=320;canvas.height=320;const ctx=canvas.getContext('2d');ctx.beginPath();ctx.arc(160,160,160,0,Math.PI*2);ctx.clip();const img=document.getElementById('cropImg');ctx.drawImage(img,(cx-r-cropX)/cropScale,(cy-r-cropY)/cropScale,r*2/cropScale,r*2/cropScale,0,0,320,320);resolve(canvas.toDataURL('image/jpeg',.9));});}
 
 // ════════════════════════════════════════════
-// 10. 프로필
+// 12. 프로필
 // ════════════════════════════════════════════
-function loadProfile(){
-  const p=JSON.parse(localStorage.getItem('re_profile')||'{}');
+function renderProfileData(p){
   document.getElementById('profileNameDisplay').innerHTML=p.name?`${esc(p.name)} <span class="profile-name-en">schedule</span>`:'My <span class="profile-name-en">schedule</span>';
-  document.getElementById('profileSubDisplay').textContent=p.sub||'이름을 설정해주세요';
+  document.getElementById('profileSubDisplay').textContent=p.sub||'이름을 설정해 주세요';
   const img=document.getElementById('profileImg'),icon=document.getElementById('avatarIcon');
   if(p.avatar){img.src=p.avatar;img.style.display='block';if(icon)icon.style.display='none';}
   else{img.src='';img.style.display='none';if(icon)icon.style.display='';}
 }
 function openProfileEdit(){
-  const p=JSON.parse(localStorage.getItem('re_profile')||'{}');
-  document.getElementById('editName').value=p.name||'';
-  document.getElementById('editSub').value=p.sub||'';
-  document.getElementById('cropSection').style.display='none';
-  document.getElementById('uploadBox').style.display='block';
-  document.getElementById('avatarUpload').value='';
-  _pendingAvatar=null;
+  document.getElementById('editName').value='';document.getElementById('editSub').value='';
+  document.getElementById('cropSection').style.display='none';document.getElementById('uploadBox').style.display='block';
+  document.getElementById('avatarUpload').value='';_pendingAvatar=null;
+  sb.from('profiles').select('*').eq('id',currentUser.id).single().then(({data})=>{
+    if(data){document.getElementById('editName').value=data.name||'';document.getElementById('editSub').value=data.sub||'';}
+  });
   document.getElementById('profileModal').classList.add('open');
 }
 function closeProfileEdit(){document.getElementById('profileModal').classList.remove('open');}
 async function openPreview(){
-  const name=document.getElementById('editName').value.trim();
-  const sub=document.getElementById('editSub').value.trim();
-  const cropVisible=document.getElementById('cropSection').style.display!=='none';
-  if(cropVisible){_pendingAvatar=await getCroppedImage();}
-  else{const p=JSON.parse(localStorage.getItem('re_profile')||'{}');_pendingAvatar=p.avatar||null;}
+  const name=document.getElementById('editName').value.trim(),sub=document.getElementById('editSub').value.trim();
+  if(document.getElementById('cropSection').style.display!=='none'){_pendingAvatar=await getCroppedImage();}
   const pi=document.getElementById('previewAvatarImg'),picon=document.getElementById('previewAvatarIcon');
-  if(_pendingAvatar){pi.src=_pendingAvatar;pi.style.display='block';picon.style.display='none';}
-  else{pi.style.display='none';picon.style.display='';}
-  const p=JSON.parse(localStorage.getItem('re_profile')||'{}');
-  document.getElementById('previewName').textContent=(name||p.name||'')+' schedule';
-  document.getElementById('previewSub').textContent=sub||p.sub||'이름을 설정해주세요';
+  if(_pendingAvatar){pi.src=_pendingAvatar;pi.style.display='block';picon.style.display='none';}else{pi.style.display='none';picon.style.display='';}
+  document.getElementById('previewName').textContent=(name||'My')+' schedule';
+  document.getElementById('previewSub').textContent=sub||'이름을 설정해 주세요';
   document.getElementById('previewModal').classList.add('open');
 }
 function closePreview(){document.getElementById('previewModal').classList.remove('open');}
-function applyProfile(){
-  const name=document.getElementById('editName').value.trim();
-  const sub=document.getElementById('editSub').value.trim();
-  const p=JSON.parse(localStorage.getItem('re_profile')||'{}');
-  p.name=name!==''?name:(p.name||'');
-  p.sub=sub!==''?sub:(p.sub||'');
-  if(_pendingAvatar)p.avatar=_pendingAvatar;
-  localStorage.setItem('re_profile',JSON.stringify(p));
-  loadProfile();closePreview();closeProfileEdit();
+async function applyProfile(){
+  const name=document.getElementById('editName').value.trim(),sub=document.getElementById('editSub').value.trim();
+  const data={name,sub};if(_pendingAvatar)data.avatar=_pendingAvatar;
+  await saveProfileToDB(data);
+  renderProfileData(data);
+  closePreview();closeProfileEdit();
 }
 document.getElementById('profileModal').addEventListener('click',function(e){if(e.target===this)closeProfileEdit();});
 
 // ════════════════════════════════════════════
-// 11. 말씀
+// 13. 말씀
 // ════════════════════════════════════════════
 const VERSES=[
   {ko:"여호와는 나의 목자시니 내게 부족함이 없으리로다",en:"The LORD is my shepherd, I lack nothing.",ref:"시편 23:1"},
-  {ko:"내가 산을 향하여 눈을 들리라 나의 도움이 어디서 올까 나의 도움은 천지를 지으신 여호와에게서로다",en:"I lift up my eyes to the mountains—where does my help come from? My help comes from the LORD, the Maker of heaven and earth.",ref:"시편 121:1-2"},
+  {ko:"나의 도움은 천지를 지으신 여호와에게서로다",en:"My help comes from the LORD, the Maker of heaven and earth.",ref:"시편 121:2"},
   {ko:"너희는 먼저 그의 나라와 그의 의를 구하라 그리하면 이 모든 것을 너희에게 더하시리라",en:"But seek first his kingdom and his righteousness, and all these things will be given to you as well.",ref:"마태복음 6:33"},
   {ko:"내게 능력 주시는 자 안에서 내가 모든 것을 할 수 있느니라",en:"I can do all this through him who gives me strength.",ref:"빌립보서 4:13"},
   {ko:"너는 마음을 다하여 여호와를 신뢰하고 네 명철을 의지하지 말라",en:"Trust in the LORD with all your heart and lean not on your own understanding.",ref:"잠언 3:5"},
   {ko:"여호와는 나의 빛이요 나의 구원이시니 내가 누구를 두려워하리요",en:"The LORD is my light and my salvation—whom shall I fear?",ref:"시편 27:1"},
-  {ko:"하나님이 세상을 이처럼 사랑하사 독생자를 주셨으니 이는 그를 믿는 자마다 멸망하지 않고 영생을 얻게 하려 하심이라",en:"For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.",ref:"요한복음 3:16"},
-  {ko:"아무것도 염려하지 말고 다만 모든 일에 기도와 간구로, 너희 구할 것을 감사함으로 하나님께 아뢰라",en:"Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.",ref:"빌립보서 4:6"},
-  {ko:"오직 여호와를 앙망하는 자는 새 힘을 얻으리니 독수리가 날개치며 올라감 같을 것이요",en:"But those who hope in the LORD will renew their strength. They will soar on wings like eagles.",ref:"이사야 40:31"},
+  {ko:"하나님이 세상을 이처럼 사랑하사 독생자를 주셨으니 이는 그를 믿는 자마다 영생을 얻게 하려 하심이라",en:"For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.",ref:"요한복음 3:16"},
+  {ko:"아무것도 염려하지 말고 다만 모든 일에 기도와 간구로 너희 구할 것을 감사함으로 하나님께 아뢰라",en:"Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.",ref:"빌립보서 4:6"},
+  {ko:"여호와를 앙망하는 자는 새 힘을 얻으리니 독수리가 날개치며 올라감 같을 것이요",en:"Those who hope in the LORD will renew their strength. They will soar on wings like eagles.",ref:"이사야 40:31"},
   {ko:"감사로 그의 문에 들어가며 찬송으로 그의 궁정에 들어가서 그에게 감사하며 그의 이름을 송축할지어다",en:"Enter his gates with thanksgiving and his courts with praise; give thanks to him and praise his name.",ref:"시편 100:4"},
-  {ko:"우리가 알거니와 하나님을 사랑하는 자 곧 그의 뜻대로 부르심을 입은 자들에게는 모든 것이 합력하여 선을 이루느니라",en:"And we know that in all things God works for the good of those who love him, who have been called according to his purpose.",ref:"로마서 8:28"},
-  {ko:"너희를 향한 나의 생각을 내가 아나니 평안이요 재앙이 아니니라 너희에게 미래와 희망을 주는 것이니라",en:"For I know the plans I have for you, declares the LORD, plans to prosper you and not to harm you, plans to give you hope and a future.",ref:"예레미야 29:11"},
+  {ko:"모든 것이 합력하여 선을 이루느니라",en:"In all things God works for the good of those who love him.",ref:"로마서 8:28"},
+  {ko:"너희에게 미래와 희망을 주는 것이니라",en:"Plans to give you hope and a future.",ref:"예레미야 29:11"},
   {ko:"하나님은 우리의 피난처시요 힘이시니 환난 중에 만날 큰 도움이시라",en:"God is our refuge and strength, an ever-present help in trouble.",ref:"시편 46:1"},
   {ko:"내가 세상 끝날까지 너희와 항상 함께 있으리라",en:"And surely I am with you always, to the very end of the age.",ref:"마태복음 28:20"},
   {ko:"주의 말씀은 내 발에 등이요 내 길에 빛이니이다",en:"Your word is a lamp for my feet, a light on my path.",ref:"시편 119:105"},
   {ko:"수고하고 무거운 짐 진 자들아 다 내게로 오라 내가 너희를 쉬게 하리라",en:"Come to me, all you who are weary and burdened, and I will give you rest.",ref:"마태복음 11:28"},
-  {ko:"강하고 담대하라 두려워하지 말며 놀라지 말라 네가 어디로 가든지 네 하나님 여호와가 너와 함께하느니라",en:"Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.",ref:"여호수아 1:9"},
+  {ko:"강하고 담대하라 두려워하지 말라 네 하나님 여호와가 너와 함께하느니라",en:"Be strong and courageous. The LORD your God will be with you wherever you go.",ref:"여호수아 1:9"},
   {ko:"이것들이 아침마다 새로우니 주의 성실하심이 크시도소이다",en:"They are new every morning; great is your faithfulness.",ref:"예레미야애가 3:23"},
-  {ko:"두려워하지 말라 내가 너와 함께 함이라 내가 너를 굳세게 하리라",en:"So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you.",ref:"이사야 41:10"},
-  {ko:"너는 하나님께 소망을 두라 나는 그가 나타나 도우심으로 말미암아 그를 찬송하리로다",en:"Put your hope in God, for I will yet praise him, my Savior and my God.",ref:"시편 42:5"},
-  {ko:"그런즉 믿음, 소망, 사랑, 이 세 가지는 항상 있을 것인데 그 중의 제일은 사랑이라",en:"And now these three remain: faith, hope and love. But the greatest of these is love.",ref:"고린도전서 13:13"},
+  {ko:"두려워하지 말라 내가 너를 굳세게 하리라 참으로 너를 도와 주리라",en:"I will strengthen you and help you.",ref:"이사야 41:10"},
+  {ko:"너는 하나님께 소망을 두라",en:"Put your hope in God.",ref:"시편 42:5"},
+  {ko:"그 중의 제일은 사랑이라",en:"The greatest of these is love.",ref:"고린도전서 13:13"},
   {ko:"사람이 마음으로 자기의 길을 계획할지라도 그의 걸음을 인도하시는 이는 여호와시니라",en:"In their hearts humans plan their course, but the LORD establishes their steps.",ref:"잠언 16:9"},
-  {ko:"너희 안에서 착한 일을 시작하신 이가 그리스도 예수의 날까지 이루실 줄을 우리는 확신하노라",en:"He who began a good work in you will carry it on to completion until the day of Christ Jesus.",ref:"빌립보서 1:6"},
-  {ko:"주께서 심지가 견고한 자를 평강에 평강으로 지키시리니 이는 그가 주를 신뢰함이니이다",en:"You will keep in perfect peace those whose minds are steadfast, because they trust in you.",ref:"이사야 26:3"},
-  {ko:"내가 주께 감사하옴은 나를 지으심이 심히 기묘하심이라",en:"I praise you because I am fearfully and wonderfully made.",ref:"시편 139:14"},
-  {ko:"은혜의 보좌 앞에 담대히 나아갈 것이니라 이는 긍휼하심을 받고 때를 따라 돕는 은혜를 얻기 위함이니라",en:"Let us approach God's throne of grace with confidence, so that we may receive mercy and find grace to help us in our time of need.",ref:"히브리서 4:16"},
-  {ko:"나의 평안을 너희에게 주노라 내가 너희에게 주는 것은 세상이 주는 것과 같지 아니하니라",en:"My peace I give you. I do not give to you as the world gives.",ref:"요한복음 14:27"},
+  {ko:"착한 일을 시작하신 이가 그리스도 예수의 날까지 이루실 줄을 우리는 확신하노라",en:"He who began a good work in you will carry it on to completion.",ref:"빌립보서 1:6"},
+  {ko:"주께서 심지가 견고한 자를 평강에 평강으로 지키시리니",en:"You will keep in perfect peace those whose minds are steadfast.",ref:"이사야 26:3"},
+  {ko:"나를 지으심이 심히 기묘하심이라",en:"I am fearfully and wonderfully made.",ref:"시편 139:14"},
+  {ko:"은혜의 보좌 앞에 담대히 나아갈 것이니라",en:"Let us approach God's throne of grace with confidence.",ref:"히브리서 4:16"},
+  {ko:"나의 평안을 너희에게 주노라",en:"My peace I give you.",ref:"요한복음 14:27"},
 ];
 function renderVerse(){
   const now=new Date(),seed=now.getFullYear()*10000+(now.getMonth()+1)*100+now.getDate();
@@ -763,16 +915,28 @@ function renderVerse(){
 }
 
 // ════════════════════════════════════════════
-// 12. 초기화
+// 14. UI 초기화
 // ════════════════════════════════════════════
-const yy=today.getFullYear(),mm=today.getMonth()+1,dd=today.getDate();
-document.getElementById('todayLabel').textContent=`${yy}.${String(mm).padStart(2,'0')}.${String(dd).padStart(2,'0')} ${WDS[today.getDay()]}`;
-document.getElementById('schedDatePicker').value=todayKey();
+function initUI(){
+  const now=new Date();
+  const yy=now.getFullYear(),mm=now.getMonth()+1,dd=now.getDate();
+  document.getElementById('todayBadge').textContent=`${yy}.${String(mm).padStart(2,'0')}.${String(dd).padStart(2,'0')} ${WDS[now.getDay()]}`;
+  document.getElementById('schedDatePicker').value=todayKey();
+  buildCal();renderScheds();renderVerse();
+}
 
-loadProfile();
-buildCal();
-renderScheds();
-renderVerse();
+// ════════════════════════════════════════════
+// 15. 앱 시작 — 세션 확인
+// ════════════════════════════════════════════
+(async()=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(session?.user){
+    await onLoggedIn(session.user);
+  }
+})();
+
+document.getElementById('loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('loginPw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 </script>
 </body>
 </html>
